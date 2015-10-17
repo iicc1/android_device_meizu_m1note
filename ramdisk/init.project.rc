@@ -1,0 +1,339 @@
+# MTK project .rc configure
+on early-init
+
+    # BATTERY proc
+    chown shell system /proc/mtk_battery_cmd/current_cmd
+    chown shell system /proc/mtk_battery_cmd/discharging_cmd
+
+on fs
+    mount ext3 /dev/block/mmcblk0p2 /system wait
+    # Sten: Workaround for permission problem start
+    chmod 0777  /
+    # Sten: Workaround for permission problem end
+    symlink /system/data /data
+    chown system system /system/data
+    # CC: force 777 to workaround the permission problem
+    chmod 0777 /system/data/system
+
+
+on post-fs-data
+#
+# Connectivity related device nodes & configuration (begin)
+#
+
+#/dev/ttyMT2 for Connectivity BT/FM/GPS usage
+    chmod 0660 /dev/ttyMT2
+    chown system system /dev/ttyMT2
+
+# STP, WMT, GPS, FM and BT Driver
+#   insmod /system/lib/modules/mtk_hif_sdio.ko
+#   insmod /system/lib/modules/mtk_stp_wmt.ko
+#   insmod /system/lib/modules/mtk_stp_uart.ko
+#   insmod /system/lib/modules/mtk_stp_gps.ko
+#   insmod /system/lib/modules/mtk_stp_bt.ko
+#   insmod /system/lib/modules/mtk_fm_drv.ko
+#   insmod /system/lib/modules/mtk_wmt_wifi.ko
+
+    insmod /system/lib/modules/mtk_wmt_detect.ko
+    
+# Create char device file for WMT, GPS, BT, FM, WIFI
+    mknod /dev/stpwmt c 190 0;
+    mknod /dev/stpgps c 191 0;
+    mknod /dev/stpbt  c 192 0;
+
+    chmod 0660 /dev/stpwmt
+    chown system system /dev/stpwmt
+    
+    chmod 0660 /dev/wmtdetect
+    chown system system /dev/wmtdetect
+    
+    mknod /dev/wmtWifi c 153 0
+    chmod 0660 /dev/wmtWifi
+    chown system system /dev/wmtWifi
+
+#Camera
+    chmod 0660 /dev/GAF001AF
+    chown system camera /dev/GAF001AF
+    
+    chmod 0660 /dev/DW9714AF
+    chown system camera /dev/DW9714AF
+    
+    chmod 0660 /dev/AD5820AF
+    chown system camera /dev/AD5820AF
+    
+	chmod 0660 /dev/BU64245
+    chown system camera /dev/BU64245
+#SMB
+    chown system system /proc/smb/ScreenComm
+    chmod 0660 /proc/smb/ScreenComm
+
+
+# BT
+    chmod 0660 /dev/stpbt
+    chown bluetooth radio /dev/stpbt
+    
+# WiFi
+    mkdir /data/misc/wifi 0770 wifi wifi
+    mkdir /data/misc/wifi/sockets 0770 wifi wifi
+    mkdir /data/misc/wpa_supplicant 0770 wifi wifi
+    chown wifi wifi /data/misc/wifi
+# GPS
+    chown gps gps /dev/stpgps
+    chown gps gps /sys/class/gpsdrv/gps/pwrctl
+    chown gps gps /sys/class/gpsdrv/gps/suspend
+    chown gps gps /sys/class/gpsdrv/gps/state
+    chown gps gps /sys/class/gpsdrv/gps/pwrsave
+    chown gps gps /sys/class/gpsdrv/gps/status
+    chmod 0660 /dev/stpgps
+
+# FM Radio device node
+    mknod /dev/fm     c 193 0;
+    chmod 0660 /dev/fm
+    chown system media /dev/fm
+    
+
+# Create CIP mount point
+    mkdir /custom
+# mount cip partitions
+    exec /sbin/e2fsck -p /dev/block/platform/mtk-msdc.0/by-name/custom
+	#mount ext4 /dev/block/platform/mtk-msdc.0/by-name/custom /custom
+    mount ext4 /dev/block/platform/mtk-msdc.0/by-name/custom /custom noatime ro wait commit=1,noauto_da_alloc
+
+#
+# Connectivity related device nodes & configuration (end)
+#
+
+# Encrypt phone function
+    setprop vold.post_fs_data_done 1
+
+# Sensor
+# iio
+## Invensense IIO settings
+    chown system system /dev/iio:device0
+    chmod 660           /dev/iio:device0
+    chown system system /sys/bus/iio/devices/iio:device0/uevent
+    chmod 660           /sys/bus/iio/devices/iio:device0/uevent
+    chown system system /sys/bus/iio/devices/iio:device0/dev
+    chmod 660           /sys/bus/iio/devices/iio:device0/dev
+    chown system system /sys/bus/iio/devices/iio:device0/buffer/length
+    chmod 660           /sys/bus/iio/devices/iio:device0/buffer/length
+    chown system system /sys/bus/iio/devices/iio:device0/buffer/enable
+    chmod 660           /sys/bus/iio/devices/iio:device0/buffer/enable
+    chown system system /sys/bus/iio/devices/iio:device0/scan_elements/in_timestamp_en
+    chmod 660           /sys/bus/iio/devices/iio:device0/scan_elements/in_timestamp_en
+    chown system system /sys/bus/iio/devices/iio:device0/scan_elements/in_timestamp_type
+    chmod 660           /sys/bus/iio/devices/iio:device0/scan_elements/in_timestamp_type
+    chown system system /sys/bus/iio/devices/iio:device0/scan_elements/in_timestamp_index
+    chmod 660           /sys/bus/iio/devices/iio:device0/scan_elements/in_timestamp_index
+    chown system system /sys/bus/iio/devices/iio:device0/sampling_frequency_available
+    chmod 660           /sys/bus/iio/devices/iio:device0/sampling_frequency_available
+    chown system system /sys/bus/iio/devices/iio:device0/reg_dump
+    chmod 660           /sys/bus/iio/devices/iio:device0/reg_dump
+    chown system system /sys/bus/iio/devices/iio:device0/temperature
+    chmod 660           /sys/bus/iio/devices/iio:device0/temperature
+    chown system system /sys/bus/iio/devices/iio:device0/master_enable
+    chmod 660           /sys/bus/iio/devices/iio:device0/master_enable
+    chown system system /sys/bus/iio/devices/iio:device0/in_anglvel_scale
+    chmod 660           /sys/bus/iio/devices/iio:device0/in_anglvel_scale
+    chown system system /sys/bus/iio/devices/iio:device0/in_anglvel_x_calibbias
+    chmod 660           /sys/bus/iio/devices/iio:device0/in_anglvel_x_calibbias
+    chown system system /sys/bus/iio/devices/iio:device0/in_anglvel_y_calibbias
+    chmod 660           /sys/bus/iio/devices/iio:device0/in_anglvel_y_calibbias
+    chown system system /sys/bus/iio/devices/iio:device0/in_anglvel_z_calibbias
+    chmod 660           /sys/bus/iio/devices/iio:device0/in_anglvel_z_calibbias
+    chown system system /sys/bus/iio/devices/iio:device0/in_anglvel_x_offset
+    chmod 660           /sys/bus/iio/devices/iio:device0/in_anglvel_x_offset
+    chown system system /sys/bus/iio/devices/iio:device0/in_anglvel_y_offset
+    chmod 660           /sys/bus/iio/devices/iio:device0/in_anglvel_y_offset
+    chown system system /sys/bus/iio/devices/iio:device0/in_anglvel_z_offset
+    chmod 660           /sys/bus/iio/devices/iio:device0/in_anglvel_z_offset
+    chown system system /sys/bus/iio/devices/iio:device0/in_anglvel_self_test_scale
+    chmod 660           /sys/bus/iio/devices/iio:device0/in_anglvel_self_test_scale
+    chown system system /sys/bus/iio/devices/iio:device0/self_test_samples
+    chmod 660           /sys/bus/iio/devices/iio:device0/self_test_samples
+    chown system system /sys/bus/iio/devices/iio:device0/self_test_threshold
+    chmod 660           /sys/bus/iio/devices/iio:device0/self_test_threshold
+    chown system system /sys/bus/iio/devices/iio:device0/sensor_phone_calling
+    chmod 660           /sys/bus/iio/devices/iio:device0/sensor_phone_calling
+    chown system system /sys/bus/iio/devices/iio:device0/gyro_enable
+    chmod 660           /sys/bus/iio/devices/iio:device0/gyro_enable
+    chown system system /sys/bus/iio/devices/iio:device0/gyro_fifo_enable
+    chmod 660           /sys/bus/iio/devices/iio:device0/gyro_fifo_enable
+    chown system system /sys/bus/iio/devices/iio:device0/gyro_rate
+    chmod 660           /sys/bus/iio/devices/iio:device0/gyro_rate
+    chown system system /sys/bus/iio/devices/iio:device0/power_state
+    chmod 660           /sys/bus/iio/devices/iio:device0/power_state
+    chown system system /sys/bus/iio/devices/iio:device0/sampling_frequency
+    chmod 660           /sys/bus/iio/devices/iio:device0/sampling_frequency
+    chown system system /sys/bus/iio/devices/iio:device0/self_test
+    chmod 660           /sys/bus/iio/devices/iio:device0/self_test
+    chown system system /sys/bus/iio/devices/iio:device0/gyro_matrix
+    chmod 660           /sys/bus/iio/devices/iio:device0/gyro_matrix
+    chown system system /sys/bus/iio/devices/iio:device0/secondary_name
+    chmod 660           /sys/bus/iio/devices/iio:device0/secondary_name
+    chown system system /sys/bus/iio/devices/iio:device0/event_accel_motion
+    chmod 660           /sys/bus/iio/devices/iio:device0/event_accel_motion
+    chown system system /sys/bus/iio/devices/iio:device0/event_smd
+    chmod 660           /sys/bus/iio/devices/iio:device0/event_smd
+    chown system system /sys/bus/iio/devices/iio:device0/event_pedometer
+    chmod 660           /sys/bus/iio/devices/iio:device0/event_pedometer
+    chown system system /sys/bus/iio/devices/iio:device0/flush_batch
+    chmod 660           /sys/bus/iio/devices/iio:device0/flush_batch
+    chown system system /sys/bus/iio/devices/iio:device0/in_accel_scale
+    chmod 660           /sys/bus/iio/devices/iio:device0/in_accel_scale
+    chown system system /sys/bus/iio/devices/iio:device0/in_accel_x_calibbias
+    chmod 660           /sys/bus/iio/devices/iio:device0/in_accel_x_calibbias
+    chown system system /sys/bus/iio/devices/iio:device0/in_accel_y_calibbias
+    chmod 660           /sys/bus/iio/devices/iio:device0/in_accel_y_calibbias
+    chown system system /sys/bus/iio/devices/iio:device0/in_accel_z_calibbias
+    chmod 660           /sys/bus/iio/devices/iio:device0/in_accel_z_calibbias
+    chown system system /sys/bus/iio/devices/iio:device0/in_accel_self_test_scale
+    chmod 660           /sys/bus/iio/devices/iio:device0/in_accel_self_test_scale
+    chown system system /sys/bus/iio/devices/iio:device0/in_accel_x_offset
+    chmod 660           /sys/bus/iio/devices/iio:device0/in_accel_x_offset
+    chown system system /sys/bus/iio/devices/iio:device0/in_accel_y_offset
+    chmod 660           /sys/bus/iio/devices/iio:device0/in_accel_y_offset
+    chown system system /sys/bus/iio/devices/iio:device0/in_accel_z_offset
+    chmod 660           /sys/bus/iio/devices/iio:device0/in_accel_z_offset
+    chown system system /sys/bus/iio/devices/iio:device0/in_accel_x_dmp_bias
+    chmod 660           /sys/bus/iio/devices/iio:device0/in_accel_x_dmp_bias
+    chown system system /sys/bus/iio/devices/iio:device0/in_accel_y_dmp_bias
+    chmod 660           /sys/bus/iio/devices/iio:device0/in_accel_y_dmp_bias
+    chown system system /sys/bus/iio/devices/iio:device0/in_accel_z_dmp_bias
+    chmod 660           /sys/bus/iio/devices/iio:device0/in_accel_z_dmp_bias
+    chown system system /sys/bus/iio/devices/iio:device0/in_anglvel_x_dmp_bias
+    chmod 660           /sys/bus/iio/devices/iio:device0/in_anglvel_x_dmp_bias
+    chown system system /sys/bus/iio/devices/iio:device0/in_anglvel_y_dmp_bias
+    chmod 660           /sys/bus/iio/devices/iio:device0/in_anglvel_y_dmp_bias
+    chown system system /sys/bus/iio/devices/iio:device0/in_anglvel_z_dmp_bias
+    chmod 660           /sys/bus/iio/devices/iio:device0/in_anglvel_z_dmp_bias
+    chown system system /sys/bus/iio/devices/iio:device0/pedometer_int_on
+    chmod 660           /sys/bus/iio/devices/iio:device0/pedometer_int_on
+    chown system system /sys/bus/iio/devices/iio:device0/pedometer_on
+    chmod 660           /sys/bus/iio/devices/iio:device0/pedometer_on
+    chown system system /sys/bus/iio/devices/iio:device0/pedometer_steps
+    chmod 660           /sys/bus/iio/devices/iio:device0/pedometer_steps
+    chown system system /sys/bus/iio/devices/iio:device0/pedometer_time
+    chmod 660           /sys/bus/iio/devices/iio:device0/pedometer_time
+    chown system system /sys/bus/iio/devices/iio:device0/pedometer_counter
+    chmod 660           /sys/bus/iio/devices/iio:device0/pedometer_counter
+    chown system system /sys/bus/iio/devices/iio:device0/pedometer_step_thresh
+    chmod 660           /sys/bus/iio/devices/iio:device0/pedometer_step_thresh
+    chown system system /sys/bus/iio/devices/iio:device0/pedometer_int_thresh
+    chmod 660           /sys/bus/iio/devices/iio:device0/pedometer_int_thresh
+    chown system system /sys/bus/iio/devices/iio:device0/smd_enable
+    chmod 660           /sys/bus/iio/devices/iio:device0/smd_enable
+    chown system system /sys/bus/iio/devices/iio:device0/smd_threshold
+    chmod 660           /sys/bus/iio/devices/iio:device0/smd_threshold
+    chown system system /sys/bus/iio/devices/iio:device0/smd_delay_threshold
+    chmod 660           /sys/bus/iio/devices/iio:device0/smd_delay_threshold
+    chown system system /sys/bus/iio/devices/iio:device0/smd_delay_threshold2
+    chmod 660           /sys/bus/iio/devices/iio:device0/smd_delay_threshold2
+    chown system system /sys/bus/iio/devices/iio:device0/dmp_on
+    chmod 660           /sys/bus/iio/devices/iio:device0/dmp_on
+    chown system system /sys/bus/iio/devices/iio:device0/dmp_int_on
+    chmod 660           /sys/bus/iio/devices/iio:device0/dmp_int_on
+    chown system system /sys/bus/iio/devices/iio:device0/dmp_event_int_on
+    chmod 660           /sys/bus/iio/devices/iio:device0/dmp_event_int_on
+    chown system system /sys/bus/iio/devices/iio:device0/step_indicator_on
+    chmod 660           /sys/bus/iio/devices/iio:device0/step_indicator_on
+    chown system system /sys/bus/iio/devices/iio:device0/batchmode_timeout
+    chmod 660           /sys/bus/iio/devices/iio:device0/batchmode_timeout
+    chown system system /sys/bus/iio/devices/iio:device0/batchmode_wake_fifo_full_on
+    chmod 660           /sys/bus/iio/devices/iio:device0/batchmode_wake_fifo_full_on
+    chown system system /sys/bus/iio/devices/iio:device0/six_axes_q_on
+    chmod 660           /sys/bus/iio/devices/iio:device0/six_axes_q_on
+    chown system system /sys/bus/iio/devices/iio:device0/six_axes_q_rate
+    chmod 660           /sys/bus/iio/devices/iio:device0/six_axes_q_rate
+    chown system system /sys/bus/iio/devices/iio:device0/three_axes_q_on
+    chmod 660           /sys/bus/iio/devices/iio:device0/three_axes_q_on
+    chown system system /sys/bus/iio/devices/iio:device0/three_axes_q_rate
+    chmod 660           /sys/bus/iio/devices/iio:device0/three_axes_q_rate
+    chown system system /sys/bus/iio/devices/iio:device0/ped_q_on
+    chmod 660           /sys/bus/iio/devices/iio:device0/ped_q_on
+    chown system system /sys/bus/iio/devices/iio:device0/ped_q_rate
+    chmod 660           /sys/bus/iio/devices/iio:device0/ped_q_rate
+    chown system system /sys/bus/iio/devices/iio:device0/step_detector_on
+    chmod 660           /sys/bus/iio/devices/iio:device0/step_detector_on
+    chown system system /sys/bus/iio/devices/iio:device0/accel_enable
+    chmod 660           /sys/bus/iio/devices/iio:device0/accel_enable
+    chown system system /sys/bus/iio/devices/iio:device0/accel_fifo_enable
+    chmod 660           /sys/bus/iio/devices/iio:device0/accel_fifo_enable
+    chown system system /sys/bus/iio/devices/iio:device0/accel_rate
+    chmod 660           /sys/bus/iio/devices/iio:device0/accel_rate
+    chown system system /sys/bus/iio/devices/iio:device0/firmware_loaded
+    chmod 660           /sys/bus/iio/devices/iio:device0/firmware_loaded
+    chown system system /sys/bus/iio/devices/iio:device0/accel_matrix
+    chmod 660           /sys/bus/iio/devices/iio:device0/accel_matrix
+    chown system system /sys/bus/iio/devices/iio:device0/motion_lpa_on
+    chmod 660           /sys/bus/iio/devices/iio:device0/motion_lpa_on
+    chown system system /sys/bus/iio/devices/iio:device0/motion_lpa_freq
+    chmod 660           /sys/bus/iio/devices/iio:device0/motion_lpa_freq
+    chown system system /sys/bus/iio/devices/iio:device0/motion_lpa_threshold
+    chmod 660           /sys/bus/iio/devices/iio:device0/motion_lpa_threshold
+    chown system system /sys/bus/iio/devices/iio:device0/in_magn_scale
+    chmod 660           /sys/bus/iio/devices/iio:device0/in_magn_scale
+    chown system system /sys/bus/iio/devices/iio:device0/compass_enable
+    chmod 660           /sys/bus/iio/devices/iio:device0/compass_enable
+    chown system system /sys/bus/iio/devices/iio:device0/compass_rate
+    chmod 660           /sys/bus/iio/devices/iio:device0/compass_rate
+    chown system system /sys/bus/iio/devices/iio:device0/compass_matrix
+    chmod 660           /sys/bus/iio/devices/iio:device0/compass_matrix
+    chown system system /sys/bus/iio/devices/iio:device0/name
+    chmod 660           /sys/bus/iio/devices/iio:device0/name
+    chown system system /sys/bus/iio/devices/iio:device0/dmp_firmware
+    chmod 660           /sys/bus/iio/devices/iio:device0/dmp_firmware
+    chown system system /sys/bus/iio/devices/iio:device0/six_axes_q_value
+    chmod 660           /sys/bus/iio/devices/iio:device0/six_axes_q_value
+
+# sensor isl29125
+    chmod 660		/sys/bus/i2c/devices/1-0044/sensor_enable
+    chown system system /sys/bus/i2c/devices/1-0044/sensor_enable
+    chmod 660		/sys/bus/i2c/devices/1-0044/batch
+    chown system system /sys/bus/i2c/devices/1-0044/batch
+    chmod 660		/sys/bus/i2c/devices/1-0044/als_flush
+    chown system system /sys/bus/i2c/devices/1-0044/als_flush
+    chmod 660		/sys/bus/i2c/devices/1-0044/tptype
+    chown system system /sys/bus/i2c/devices/1-0044/tptype
+
+# sensor pa122
+    chmod 660		/sys/bus/i2c/devices/1-001e/ps_enable
+    chown system system /sys/bus/i2c/devices/1-001e/ps_enable
+    chmod 660		/sys/bus/i2c/devices/1-001e/ps_batch
+    chown system system /sys/bus/i2c/devices/1-001e/ps_batch
+    chmod 660		/sys/bus/i2c/devices/1-001e/calibration
+    chown system system /sys/bus/i2c/devices/1-001e/calibration
+    chmod 660		/sys/bus/i2c/devices/1-001e/calibvalue
+    chown system system /sys/bus/i2c/devices/1-001e/calibvalue
+    chmod 660		/sys/bus/i2c/devices/1-001e/wakeup_enable
+    chown system system /sys/bus/i2c/devices/1-001e/wakeup_enable
+
+# mx-gs
+    chmod 660		/sys/devices/platform/mx-gs/gesture_control
+    chown system system /sys/devices/platform/mx-gs/gesture_control
+    chmod 660		/sys/devices/platform/mx-gs/gesture_data
+    chown system system /sys/devices/platform/mx-gs/gesture_data
+
+# tp
+    chmod 660		/sys/devices/mx_tsp/hall_mode
+    chown system system /sys/devices/mx_tsp/hall_mode
+
+on boot
+
+#
+# Connectivity related services (Begin)
+#
+service wmtLoader /system/bin/logwrapper /system/bin/wmt_loader
+    user root
+    group root
+    class main
+    oneshot
+    
+service conn_launcher /system/bin/logwrapper /system/bin/6620_launcher -p /system/etc/firmware/
+    user system
+    group system
+    class core
+
+#
+# Connectivity related services (End)
+#
